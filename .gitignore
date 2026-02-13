@@ -1,0 +1,4 @@
+mlops2_venv/
+venv/
+__pycache__/
+*.pyc
