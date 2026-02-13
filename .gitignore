@@ -5,3 +5,15 @@ __pycache__/
 data/raw/*
 !data/raw/*.dvc
 .dvc/cache/
+
+# MLflow
+mlflow.db
+mlruns/
+
+# Model artifacts
+model.pt
+*.pt
+
+.vscode/
+
+*.png
