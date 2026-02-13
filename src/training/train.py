@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-def train_one_epoch(model, dataloader, criterion, optimizer):
+def train_one_epoch(model, dataloader, criterion, optimizer, max_batches):
     loss_history = []
 
     for batch_idx, (images, labels) in enumerate(dataloader):
@@ -26,7 +26,7 @@ def train_one_epoch(model, dataloader, criterion, optimizer):
         mlflow.log_metric("loss", loss.item(), step=batch_idx)
 
         # keep training short for now
-        if batch_idx == 5:
+        if batch_idx == max_batches:
             break
 
     return loss_history
@@ -34,6 +34,11 @@ def train_one_epoch(model, dataloader, criterion, optimizer):
 
 def train():
     print("Starting training pipeline...")
+
+    # ---- Hyperparameters (professional practice) ----
+    learning_rate = 0.001
+    batch_size = 4
+    max_batches = 5
 
     # ---- Load dataset (beginner version) ----
     transform = transforms.Compose([
@@ -46,7 +51,7 @@ def train():
         transform=transform
     )
 
-    dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     print("Dataset loaded. Total images:", len(dataset))
 
@@ -56,7 +61,7 @@ def train():
 
         # ---- Define loss and optimizer ----
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     print("Loss function and optimizer ready")
 
@@ -66,11 +71,19 @@ def train():
     print("Batch shape:", images.shape)    
 
     # Start MLflow run
-    mlflow.start_run()
+    run_name = f"resnet18_lr{learning_rate}_bs{batch_size}"
+
+    mlflow.start_run(run_name=run_name)
+
+
+    mlflow.log_param("learning_rate", learning_rate)
+    mlflow.log_param("batch_size", batch_size)
+    mlflow.log_param("max_batches", max_batches)
+
 
     # ---- Small training loop (beginner version) ----
     print("Starting small training loop...")
-    loss_history = train_one_epoch(model, dataloader, criterion, optimizer)
+    loss_history = train_one_epoch(model, dataloader, criterion, optimizer, max_batches)
 
     print("Training loop finished")
 
