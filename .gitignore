@@ -2,3 +2,6 @@ mlops2_venv/
 venv/
 __pycache__/
 *.pyc
+data/raw/*
+!data/raw/*.dvc
+.dvc/cache/
