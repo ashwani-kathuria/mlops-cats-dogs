@@ -5,9 +5,16 @@ from src.inference.predict import predict, load_model
 import time
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
+import logging
 
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s - %(levelname)s - %(message)s",
+# )
+logger = logging.getLogger("uvicorn.error")
 
 model = None
+REQUEST_COUNT = 0
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,10 +48,16 @@ def health_check():
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_image(file: UploadFile = File(...)):
 
+    global REQUEST_COUNT
+    REQUEST_COUNT += 1
+
     temp_path = "temp.jpg"
 
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+
+    logger.info("Received prediction request")
+    logger.info(f"Total requests served: {REQUEST_COUNT}")
 
     # ---- Start timer ----
     start_time = time.time()
@@ -53,6 +66,8 @@ async def predict_image(file: UploadFile = File(...)):
 
     # ---- End timer ----
     elapsed = (time.time() - start_time) * 1000  # milliseconds
+
+    logger.info(f"Prediction result={result}, latency={elapsed:.2f}ms")
 
     return {
         "prediction": result,
