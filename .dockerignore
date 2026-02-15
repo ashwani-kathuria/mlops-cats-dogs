@@ -11,8 +11,12 @@ mlops2_venv/
 # VS Code
 .vscode/
 
-# MLflow artifacts
-mlruns/
+# Ignore everything in mlruns
+mlruns/*
+
+# BUT allow MLflow model artifact
+!mlruns/0/models/m-1b37bd517f2b4b7aa402bb405730c4bb/artifacts/**
+
 mlflow.db
 
 # Git

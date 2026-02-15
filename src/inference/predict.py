@@ -14,7 +14,7 @@ from src.training.model import build_model
 #     return model
 
 # ---- Load model from MLflow ----
-def load_model(model_uri="runs:/0f1fb95c8a8941629b3fef6bfabe8bf3/model"):
+def load_model(model_uri="mlruns/0/models/m-1b37bd517f2b4b7aa402bb405730c4bb/artifacts"):
     model = mlflow.pytorch.load_model(model_uri)
     model.eval()
     return model
