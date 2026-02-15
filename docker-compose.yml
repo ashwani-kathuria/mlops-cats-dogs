@@ -1,0 +1,8 @@
+version: "3.9"
+
+services:
+  catsdogs-api:
+    image: catsdogs-api
+    container_name: catsdogs-api-container
+    ports:
+      - "8000:8000"

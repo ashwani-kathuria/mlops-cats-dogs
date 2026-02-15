@@ -34,3 +34,8 @@ jobs:
       # Build Docker image
       - name: Build Docker image
         run: docker build -t catsdogs-api .
+
+      # Run container using docker compose (CD step)
+      - name: Deploy with Docker Compose
+        run: |
+          docker compose up -d
