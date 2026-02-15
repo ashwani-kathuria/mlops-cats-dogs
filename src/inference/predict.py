@@ -1,17 +1,23 @@
 import torch
 from PIL import Image
 import torchvision.transforms as transforms
+import mlflow.pytorch
 
 from src.training.model import build_model
 
 
 # ---- Load model ----
-def load_model(model_path="model.pt"):
-    model = build_model()
-    model.load_state_dict(torch.load(model_path, map_location="cpu"))
+# def load_model(model_path="model.pt"):
+#     model = build_model()
+#     model.load_state_dict(torch.load(model_path, map_location="cpu"))
+#     model.eval()
+#     return model
+
+# ---- Load model from MLflow ----
+def load_model(model_uri="runs:/0f1fb95c8a8941629b3fef6bfabe8bf3/model"):
+    model = mlflow.pytorch.load_model(model_uri)
     model.eval()
     return model
-
 
 # ---- Preprocess image ----
 def preprocess_image(image_path):

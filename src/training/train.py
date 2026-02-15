@@ -99,6 +99,7 @@ def train():
 
     # Log model artifact to MLflow
     mlflow.log_artifact("model.pt")
+    # log model to mlflow
     mlflow.pytorch.log_model(model, "model")
     print("Model logged to MLflow")
 
