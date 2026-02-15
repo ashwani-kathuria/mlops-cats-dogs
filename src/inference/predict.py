@@ -26,10 +26,9 @@ def preprocess_image(image_path):
 
 
 # ---- Predict ----
-def predict(image_path):
+def predict(given_model, image_path):
     classes = ["Cat", "Dog"]
 
-    model = load_model()
     img_tensor = preprocess_image(image_path)
 
 # torch.no_grad: disables gradient calculation for all operations within its scope.
@@ -37,13 +36,13 @@ def predict(image_path):
 # to reduce memory consumption and speed up computations, as gradients 
 # are not needed for updating model weights in these phases
     with torch.no_grad():
-        outputs = model(img_tensor)
+        outputs = given_model(img_tensor)
         _, pred = torch.max(outputs, 1)
 
     return classes[pred.item()]
 
-
 if __name__ == "__main__":
     sample = "data/raw/PetImages/Cat/0.jpg"
-    result = predict(sample)
+    model = load_model()
+    result = predict(model, sample)
     print("Prediction:", result)

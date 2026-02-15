@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 import shutil
 import torch
-from src.inference.predict import predict, load_model, preprocess_image
+from src.inference.predict import predict, load_model
 import time
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
@@ -49,15 +49,7 @@ async def predict_image(file: UploadFile = File(...)):
     # ---- Start timer ----
     start_time = time.time()
 
-    # Preprocess + Predict
-    img_tensor = preprocess_image(temp_path)
-
-    with torch.no_grad():
-        outputs = model(img_tensor)
-        _, pred = torch.max(outputs, 1)
-
-    classes = ["Cat", "Dog"]
-    result = classes[pred.item()]
+    result = predict(model, temp_path)
 
     # ---- End timer ----
     elapsed = (time.time() - start_time) * 1000  # milliseconds
