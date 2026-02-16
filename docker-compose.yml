@@ -7,6 +7,8 @@ services:
     container_name: catsdogs-api-container
     ports:
       - "8000:8000"
+    environment:
+      - DEPLOY_ENV=local
 
   prometheus:
     image: prom/prometheus

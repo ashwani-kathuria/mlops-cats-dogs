@@ -1,17 +1,35 @@
 import torch
+import os
 from PIL import Image
 import torchvision.transforms as transforms
 import mlflow.pytorch
 
 from src.training.model import build_model
 
+def load_model():
+    deploy_env = os.getenv("DEPLOY_ENV", "local")
+    print(f"Running in environment: {deploy_env}")
+
+    model = build_model()
+
+    if deploy_env == "aws":
+        print("Loading model from MLflow artifact (AWS mode)")
+        model_uri = os.getenv("MODEL_URI")
+        model = mlflow.pytorch.load_model(model_uri)
+
+    else:
+        print("Loading local model.pt (LOCAL mode)")
+        model.load_state_dict(torch.load("model.pt", map_location="cpu"))
+        model.eval()
+
+    return model
 
 # ---- Load model ----
-def load_model(model_path="model.pt"):
-    model = build_model()
-    model.load_state_dict(torch.load(model_path, map_location="cpu"))
-    model.eval()
-    return model
+# def load_model(model_path="model.pt"):
+#     model = build_model()
+#     model.load_state_dict(torch.load(model_path, map_location="cpu"))
+#     model.eval()
+#     return model
 
 # ---- Load model from MLflow ----
 # def load_model(model_uri="mlruns/0/models/m-dac28dcfe177444fa6422ba52b1d2c03/artifacts"):
