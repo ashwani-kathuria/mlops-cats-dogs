@@ -1,6 +1,8 @@
 # ---- Base Image ----
 FROM python:3.11-slim
 
+ENV DEPLOY_ENV=local
+
 # ---- Set working directory ----
 WORKDIR /app
 
