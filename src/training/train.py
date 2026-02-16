@@ -1,14 +1,21 @@
 import mlflow
+import mlflow.pytorch
 from model import build_model
 import matplotlib.pyplot as plt
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-def train_one_epoch(model, dataloader, criterion, optimizer, max_batches):
+
+# ---------------------------------------------------
+# Train One Epoch
+# ---------------------------------------------------
+def train_one_epoch(model, dataloader, criterion, optimizer, max_batches, epoch):
     loss_history = []
+
+    model.train()
 
     for batch_idx, (images, labels) in enumerate(dataloader):
 
@@ -20,27 +27,104 @@ def train_one_epoch(model, dataloader, criterion, optimizer, max_batches):
         loss.backward()
         optimizer.step()
 
-        print(f"Batch {batch_idx} Loss:", loss.item())
+        # ---- Accuracy ----
+        _, preds = torch.max(outputs, 1)
+        accuracy = (preds == labels).float().mean()
+
+        print(f"Epoch {epoch+1} Batch {batch_idx} Loss:", loss.item())
+
         loss_history.append(loss.item())
 
-        mlflow.log_metric("loss", loss.item(), step=batch_idx)
+        # unique step id across epochs
+        step_id = epoch * max_batches + batch_idx
 
-        # keep training short for now
-        if batch_idx == max_batches:
+        mlflow.log_metric("loss", loss.item(), step=step_id)
+        mlflow.log_metric("train_accuracy", accuracy.item(), step=step_id)
+
+        if batch_idx >= max_batches:
             break
 
     return loss_history
 
 
+# ---------------------------------------------------
+# Evaluate on Test Set
+# ---------------------------------------------------
+def evaluate(model, dataloader, max_eval_batches=20):
+    model.eval()
+
+    correct = 0
+    total = 0
+
+    cat_preds = 0
+    dog_preds = 0
+
+    with torch.no_grad():
+        for batch_idx, (images, labels) in enumerate(dataloader):
+
+            outputs = model(images)
+            _, preds = torch.max(outputs, 1)
+
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+
+            cat_preds += (preds == 0).sum().item()
+            dog_preds += (preds == 1).sum().item()
+
+            # limit evaluation speed
+            if batch_idx >= max_eval_batches:
+                break
+
+    accuracy = correct / total
+
+    print("\n===== Evaluation Summary =====")
+    print(f"Total Samples Evaluated: {total}")
+    print(f"Correct Predictions: {correct}")
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Cat Predictions: {cat_preds}")
+    print(f"Dog Predictions: {dog_preds}")
+
+    mlflow.log_metric("test_accuracy", accuracy)
+    mlflow.log_metric("cat_predictions", cat_preds)
+    mlflow.log_metric("dog_predictions", dog_preds)
+
+    return accuracy
+
+def evaluate_old(model, dataloader):
+    model.eval()
+
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for images, labels in dataloader:
+            outputs = model(images)
+            _, preds = torch.max(outputs, 1)
+
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+
+    accuracy = correct / total
+    print(f"Test Accuracy: {accuracy:.4f}")
+
+    mlflow.log_metric("test_accuracy", accuracy)
+
+    return accuracy
+
+
+# ---------------------------------------------------
+# Main Training Function
+# ---------------------------------------------------
 def train():
     print("Starting training pipeline...")
 
-    # ---- Hyperparameters (professional practice) ----
-    learning_rate = 0.001
+    # ---- Hyperparameters ----
+    learning_rate = 0.0003
     batch_size = 4
-    max_batches = 5
+    max_batches = 20
+    num_epochs = 3
 
-    # ---- Load dataset (beginner version) ----
+    # ---- Dataset ----
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -51,82 +135,81 @@ def train():
         transform=transform
     )
 
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    # ---- Train/Test Split ----
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
 
-    print("Dataset loaded. Total images:", len(dataset))
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-    # Build model
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    print(f"Train size: {train_size}, Test size: {test_size}")
+
+    # ---- Model ----
     model = build_model()
     print("Model loaded")
 
-        # ---- Define loss and optimizer ----
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     print("Loss function and optimizer ready")
 
-
-    # ---- Test one forward pass ----
-    images, labels = next(iter(dataloader))
-    print("Batch shape:", images.shape)    
-
-    # Start MLflow run
+    # ---- MLflow Start ----
     run_name = f"resnet18_lr{learning_rate}_bs{batch_size}"
 
     mlflow.start_run(run_name=run_name)
 
-
     mlflow.log_param("learning_rate", learning_rate)
     mlflow.log_param("batch_size", batch_size)
     mlflow.log_param("max_batches", max_batches)
+    mlflow.log_param("num_epochs", num_epochs)
 
+    # ---- Training Loop ----
+    print("Starting training loop...")
 
-    # ---- Small training loop (beginner version) ----
-    print("Starting small training loop...")
-    loss_history = train_one_epoch(model, dataloader, criterion, optimizer, max_batches)
+    all_loss_history = []
+
+    for epoch in range(num_epochs):
+        print(f"Epoch {epoch+1}/{num_epochs}")
+
+        epoch_loss = train_one_epoch(
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            max_batches,
+            epoch
+        )
+
+        all_loss_history.extend(epoch_loss)
 
     print("Training loop finished")
 
-    # Log some example parameters
-    mlflow.log_param("model", "resnet18")
-    mlflow.log_param("num_classes", 2)
+    # ---- Evaluation ----
+    print("Evaluating model on test set...")
+    evaluate(model, test_loader)
 
-    print("MLflow logging started")
-
-    # Save model locally
+    # ---- Save Model ----
     torch.save(model.state_dict(), "model.pt")
-    print("Model saved locally")
-
-    # Log model artifact to MLflow
     mlflow.log_artifact("model.pt")
-    # log model to mlflow
     mlflow.pytorch.log_model(model, "model")
-    print("Model logged to MLflow")
 
-    # Log a dummy metric (we will replace with real accuracy later)
-    mlflow.log_metric("accuracy", 0.80)
-    print("Metric logged")
+    print("Model saved and logged to MLflow")
 
-    # ---- Create real loss curve ----
+    # ---- Plot Loss Curve ----
     plt.figure()
-    plt.plot(loss_history)
+    plt.plot(all_loss_history)
     plt.title("Training Loss Curve")
-    plt.xlabel("Batch")
+    plt.xlabel("Step")
     plt.ylabel("Loss")
 
     plot_path = "training_loss.png"
     plt.savefig(plot_path)
 
-    print("Training loss curve saved")
-
     mlflow.log_artifact(plot_path)
-    print("Training loss curve logged to MLflow")
-    print("Loss curve saved")
 
-    # Log plot to MLflow
-    mlflow.log_artifact(plot_path)
-    print("Loss curve logged to MLflow")
-
+    print("Loss curve saved and logged")
 
     mlflow.end_run()
     print("Training pipeline finished")

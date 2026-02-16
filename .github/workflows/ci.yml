@@ -2,7 +2,10 @@ name: MLOps CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - improve-model-training
+      - aws-deployment
   pull_request:
     branches: [ main ]
 
