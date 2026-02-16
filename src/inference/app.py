@@ -1,11 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 import shutil
-import torch
 from src.inference.predict import predict, load_model
 import time
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import logging
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # logging.basicConfig(
 #     level=logging.INFO,
@@ -28,6 +28,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+# Prometeus integration 
+Instrumentator().instrument(app).expose(app)
 
 # ---- Response model  ----
 class PredictionResponse(BaseModel):
