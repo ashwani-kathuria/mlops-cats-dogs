@@ -7,17 +7,17 @@ from src.training.model import build_model
 
 
 # ---- Load model ----
-# def load_model(model_path="model.pt"):
-#     model = build_model()
-#     model.load_state_dict(torch.load(model_path, map_location="cpu"))
-#     model.eval()
-#     return model
-
-# ---- Load model from MLflow ----
-def load_model(model_uri="mlruns/0/models/m-dac28dcfe177444fa6422ba52b1d2c03/artifacts"):
-    model = mlflow.pytorch.load_model(model_uri)
+def load_model(model_path="model.pt"):
+    model = build_model()
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
     model.eval()
     return model
+
+# ---- Load model from MLflow ----
+# def load_model(model_uri="mlruns/0/models/m-dac28dcfe177444fa6422ba52b1d2c03/artifacts"):
+#     model = mlflow.pytorch.load_model(model_uri)
+#     model.eval()
+#     return model
 
 # ---- Preprocess image ----
 def preprocess_image(image_path):
