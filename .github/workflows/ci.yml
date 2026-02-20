@@ -6,6 +6,7 @@ on:
       - main
       - improve-model-training
       - Prometheus
+      - feature/aws-deployment
 
 permissions:
   id-token: write
