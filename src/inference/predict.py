@@ -16,7 +16,6 @@ def load_model():
         print("Loading model from MLflow artifact (AWS mode)")
         model_uri = os.getenv("MODEL_URI")
         model = mlflow.pytorch.load_model(model_uri)
-
     else:
         print("Loading local model.pt (LOCAL mode)")
         model.load_state_dict(torch.load("model.pt", map_location="cpu"))
