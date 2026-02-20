@@ -23,4 +23,3 @@ services:
     container_name: grafana-container
     ports:
       - "3000:3000"
- 
