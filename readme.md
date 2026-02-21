@@ -1,179 +1,220 @@
-MLOps Cats vs Dogs — End-to-End Pipeline
-Project Overview
+# 🐱🐶 MLOps Cats vs Dogs — End-to-End Production Pipeline
 
-This project demonstrates a complete MLOps pipeline for a Cats vs Dogs image classification model using:
+An end-to-end MLOps project demonstrating **model training, experiment tracking, API deployment, CI/CD automation, monitoring, and AWS cloud deployment** using modern industry tools.
 
-PyTorch (model training)
+---
 
-MLflow (experiment tracking)
+# 🚀 Project Overview
 
-DVC (data versioning)
+This repository implements a complete Machine Learning lifecycle:
 
-FastAPI (model serving)
+✅ Model Training using PyTorch (ResNet18 Transfer Learning)
+✅ Experiment Tracking with MLflow
+✅ Data Versioning using DVC
+✅ REST API using FastAPI
+✅ Containerization with Docker
+✅ CI/CD using GitHub Actions
+✅ Deployment to AWS App Runner
+✅ Monitoring using Prometheus + Grafana
 
-Docker (containerization)
+The goal is to simulate a **production-ready MLOps architecture**.
 
-GitHub Actions (CI/CD automation)
+---
 
-The goal is to simulate a production-ready ML workflow, from training to deployment and monitoring.
+# 🧱 Tech Stack
 
-Architecture Flow
-Git Push
-   ↓
-GitHub Actions (CI)
-   - Install dependencies
-   - Run tests (pytest)
-   - Build Docker image
-   ↓
-CD Pipeline
-   - Deploy using docker-compose
-   ↓
-FastAPI Inference Service
-   - Health endpoint
-   - Prediction endpoint
-   - Monitoring logs
+| Area                | Tools Used           |
+| ------------------- | -------------------- |
+| Model Training      | PyTorch, ResNet18    |
+| Experiment Tracking | MLflow               |
+| Data Versioning     | DVC                  |
+| API                 | FastAPI              |
+| Documentation UI    | Swagger              |
+| Containerization    | Docker               |
+| CI/CD               | GitHub Actions       |
+| Cloud Deployment    | AWS App Runner + ECR |
+| Monitoring          | Prometheus + Grafana |
 
-Project Structure
-mlops-cats-dogs/
-│
-├── src/
-│   ├── training/
-│   │   ├── train.py
-│   │   ├── model.py
-│   │   └── preprocess.py
-│   │
-│   └── inference/
-│       ├── app.py
-│       └── predict.py
-│
-├── tests/
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-└── README.md
+---
 
-Setup Instructions
-Create Virtual Environment
+# 📁 Project Structure
+
+```
+src/
+ ├── training/
+ │    ├── train.py
+ │    ├── model.py
+ │    └── preprocess.py
+ ├── inference/
+ │    ├── app.py
+ │    └── predict.py
+tests/
+Dockerfile
+docker-compose.yml
+requirements.txt
+```
+
+---
+
+# ⚙️ Local Setup
+
+## 1️⃣ Clone Repository
+
+```
+git clone <repo-url>
+cd mlops-cats-dogs
+```
+
+## 2️⃣ Create Virtual Environment
+
+```
 python -m venv mlops2_venv
-mlops2_venv\Scripts\activate   # Windows
-
-Install Dependencies
+mlops2_venv\Scripts\activate
 pip install -r requirements.txt
+```
 
-Run Training Pipeline
-python src/training/train.py
+---
 
-
-This will:
-
-Train ResNet18 model
-
-Log metrics in MLflow
-
-Save model artifact
+# 🧠 Model Training
 
 Start MLflow UI:
 
+```
 mlflow ui
+```
 
+Run training:
+
+```
+python src/training/train.py
+```
 
 Open:
 
+```
 http://127.0.0.1:5000
+```
 
-Run FastAPI Locally
+You will see:
+
+* Parameters
+* Metrics
+* Artifacts
+* Model versions
+
+---
+
+# 🌐 Run API Locally
+
+```
 uvicorn src.inference.app:app --reload
+```
 
+Swagger UI:
 
-Open API docs:
-
+```
 http://127.0.0.1:8000/docs
+```
 
+Upload an image and test prediction.
 
-Endpoints:
+---
 
-GET  /health
-POST /predict
+# 🐳 Docker Usage
 
-Docker Usage
-Build Image
+## Build Image
+
+```
 docker build -t catsdogs-api .
+```
 
-Run Container
+## Run Container
+
+```
 docker run -p 8000:8000 catsdogs-api
+```
 
-Docker Compose Deployment
+---
+
+# 📊 Monitoring (Prometheus + Grafana)
+
+Start monitoring stack:
+
+```
 docker compose up
+```
+
+Access dashboards:
+
+```
+API:        http://localhost:8000/docs
+Prometheus: http://localhost:9090
+Grafana:    http://localhost:3000
+```
 
 
-This simulates the CD deployment step.
+# 🔄 CI/CD Pipeline
 
-CI/CD Pipeline
+GitHub Actions automatically:
 
-GitHub Actions automatically runs on push:
-
-
-CI (Continuous Integration)
-
-Install dependencies
-
-Run pytest tests
-
-Build Docker image
+* Runs unit tests
+* Builds Docker image
+* Pushes image to AWS ECR
+* Triggers deployment on AWS App Runner
 
 
-CD (Continuous Deployment)
+# ☁️ AWS Deployment
 
-Deploy container using docker-compose
+Deployment uses:
 
-Workflow file:
+* Amazon ECR — container registry
+* AWS App Runner — serverless container hosting
 
-.github/workflows/ci.yml
+Environment variable:
 
+```
+DEPLOY_ENV=aws
+```
 
-Monitoring & Logging
+Public endpoint is generated automatically after deployment.
 
-The API includes basic monitoring features:
+---
 
-Request counter
+# 🔐 Security
 
-Latency measurement
+* GitHub OIDC used instead of static AWS keys
+* IAM Role authentication for ECR push
+* Secrets managed via GitHub Secrets
 
-Structured logging
+---
 
-Example logs:
+# 🧪 Testing
 
-Received prediction request
-Prediction result=Dog latency=25ms
-Total requests served: 3
+Run tests locally:
 
-Run Tests
+```
 pytest
+```
 
+Smoke tests validate preprocessing and prediction pipeline.
 
-Tests include:
+---
 
-Preprocessing validation
+# 🧩 Future Improvements
 
-Prediction logic
+* ECS Fargate deployment
+* Model Registry integration
+* Canary deployments
+* Auto-scaling dashboards
+* Model performance monitoring
 
-Error handling
+---
 
+# 👨‍💻 Author
 
-Tools & Technologies
+**Ashwani Kathuria**
+MLOps | AI Engineering | Backend Systems
 
-Python
+---
 
-PyTorch
-
-FastAPI
-
-MLflow
-
-DVC
-
-Docker
-
-Docker Compose
-
-GitHub Actions
+⭐ If you find this project useful, feel free to star the repository!
