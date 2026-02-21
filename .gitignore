@@ -10,10 +10,6 @@ data/raw/*
 mlflow.db
 mlruns/
 
-# Model artifacts
-model.pt
-*.pt
-
 .vscode/
 
 *.png

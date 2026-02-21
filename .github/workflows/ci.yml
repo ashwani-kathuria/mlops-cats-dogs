@@ -1,44 +1,52 @@
-name: MLOps CI Pipeline
+name: CI-CD Pipeline
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - improve-model-training
-      - aws-deployment
-  pull_request:
-    branches: [ main ]
+      - Prometheus
+      - feature/aws-deployment
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  build-test-docker:
+  build-test-push:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
-      # Setup Python
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # Install dependencies
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest
+        run: pip install -r requirements.txt
 
-      # Run tests
-      - name: Run pytest
+      - name: Run tests
         run: pytest
 
-      # Build Docker image
-      - name: Build Docker image
-        run: docker build -t catsdogs-api .
+      # 🔐 Assume IAM Role via GitHub OIDC
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
-      # Run container using docker compose (CD step)
-      - name: Deploy with Docker Compose
+      # 🐳 Login to ECR
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 🏗 Build & Push Docker Image
+      - name: Build and Push Image
         run: |
-          docker compose up -d
+          docker build -t catsdogs-api .
+          docker tag catsdogs-api:latest 804887692844.dkr.ecr.us-east-1.amazonaws.com/catsdogs-api:latest
+          docker push 804887692844.dkr.ecr.us-east-1.amazonaws.com/catsdogs-api:latest
